@@ -1,0 +1,164 @@
+---
+title: "KNN - Caravan dataset"
+output: rmarkdown::github_document
+    
+---
+
+```{r}
+
+library(ISLR)
+
+str(Caravan)
+```
+
+```{r}
+# Checking the number of customers who purchased insurance
+```
+
+```{r}
+
+# Checking the number of customers who purchased insurance
+summary(Caravan$Purchase)
+```
+
+```{r}
+# Checking for NA values
+any(is.na(Caravan))
+```
+
+
+```{r}
+# checking the variance of column 1
+var(Caravan[, 1])
+
+# Checking the variance of column 2
+var(Caravan[,2])
+
+```
+
+```{r}
+# So, clearly the scales are very different for these two columns. For KNN, it is very important to normalise the data
+```
+
+```{r}
+# saving the dependent variable
+purchase <- Caravan[,"Purchase"]
+head(purchase)
+```
+
+```{r}
+# standardize the independent variables. Removing 86 because that is the dependent variable
+standardized.Caravan <- scale(Caravan[,-86])
+```
+
+```{r}
+# confirming that we have standardized the variables
+print(var(standardized.Caravan[, 1]))
+print(var(standardized.Caravan[, 2]))
+```
+
+```{r}
+# Train Test split of data
+test.index <- 1:1000
+test.data <- standardized.Caravan[test.index, ]
+test.dependent.var <- purchase[test.index]
+
+train.data <- standardized.Caravan[-test.index, ]
+train.dependent.var <- purchase[-test.index]
+
+```
+
+```{r}
+# Building KNN model
+library(class)
+
+set.seed(101)
+
+# using train.dependent.var, the model will try to predict y for test.data
+predicted.y <- knn(train.data, test.data, train.dependent.var, k=1)
+```
+
+```{r}
+head(predicted.y)
+```
+
+```{r}
+# Evaluate the model
+misclass.err <- mean(test.dependent.var != predicted.y)
+
+print(misclass.err)
+```
+
+```{r}
+# How to choose K value
+
+# suppose we say k=3
+predicted.y <- knn(train.data, test.data, train.dependent.var, k=3)
+
+misclass.err <- mean(test.dependent.var != predicted.y)
+
+print(misclass.err)
+
+```
+
+```{r}
+# So the misclassification rate has come down from 11.3% to 7.3% when we choose k=3
+```
+
+```{r}
+# suppose we say k=5
+predicted.y <- knn(train.data, test.data, train.dependent.var, k=5)
+
+misclass.err <- mean(test.dependent.var != predicted.y)
+
+print(misclass.err)
+```
+
+```{r}
+# So now it is 6.6%. But how do we know the ideal k value? For that we will do a for loop that will run the model for different values of k
+
+predicted.y <- NULL
+err.rate <- NULL
+
+# Setting as NULL because these are going to be vectors
+
+for (i in 1:20){
+  set.seed(101)
+  predicted.y <- knn(train.data, test.data, train.dependent.var, k=i)
+  
+  err.rate[i] <- mean(test.dependent.var != predicted.y)
+  
+  
+}
+print(err.rate)
+```
+
+```{r}
+# visualize K Elbow method
+
+library(ggplot2)
+k.values <- 1:20
+error.df <- data.frame(err.rate, k.values)
+error.df
+```
+
+```{r}
+ggplot(error.df, aes(x=k.values, y=err.rate)) + geom_point() + geom_line(lty = 'dotted', color ='red')
+```
+
+```{r}
+# It looks like after k=9, misclass rate flat lines. so that's where our elbow lies. So we will choose k = 9 as our ideal value. 
+```
+
+```{r}
+predicted.y <- knn(train.data, test.data, train.dependent.var, k=9)
+
+misclass.err <- mean(test.dependent.var != predicted.y)
+
+print(misclass.err)
+```
+
+```{r}
+head(predicted.y, 10)
+```
+
